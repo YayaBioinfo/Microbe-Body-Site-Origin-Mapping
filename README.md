@@ -9,7 +9,7 @@ A two-part pipeline to classify microbial species detected in **cfRNA data** by 
 This pipeline implements the body site classification approach described in Tan et al. (2023, *Nature Microbiology*), adapted for cfRNA-derived microbial profiles from Kraken2. The workflow consists of two parts:
 
 - **Part 1 (Python):** Retrieve experiment data from the Disbiome API and map each microbial species to a standardized body site category
-- **Part 2 (R):** Merge body site mappings with RUV-normalized Kraken2 species counts, and visualize mean species abundance per body site across timepoints
+- **Part 2 (R):** Merge body site mappings with RUV-normalized Kraken2 species counts, and visualize mean species count per body site across timepoints
 
 ```
 Disbiome API
@@ -24,7 +24,7 @@ microbe_body_sites_mapping.csv
 [R] Merge with RUV-normalized Kraken2 counts + metadata
      │
      ▼
-Line plot: mean species per body site across timepoints (T1–T10)
+Line plot: mean species count per body site across timepoints (T1–T10)
 ```
 
 ---
@@ -95,24 +95,26 @@ install.packages(c("dplyr", "tidyr", "ggplot2", "readr", "tibble"))
 
 ### How It Works
 
-1. **Load and clean** the RUV-normalized species count matrix; extract genus from species names
-2. **Merge** species counts with body site mappings via genus-level join
-3. **Flag multi-site genera** — species whose genus maps to more than one body site are assigned to a separate `"multiple"` category
-4. **Pivot to long format** and filter for non-zero counts
-5. **Join metadata** to attach timepoint labels (T1–T10) to each sample
-6. **Summarize** mean number of species per body site per timepoint
-7. **Plot** a line plot (log10 y-axis) of mean species count per body site across timepoints
+1. **Load and clean** the RUV-normalized species count matrix
+2. **Extract genus** from species names — used only as a join key to match species against the body site mapping file
+3. **Merge** species counts with body site mappings via genus-level join
+4. **Flag multi-site genera** — species whose genus maps to more than one body site are assigned to a separate `"multiple"` category to avoid misclassification
+5. **Pivot to long format** and filter for non-zero counts
+6. **Join metadata** to attach timepoint labels (T1–T10) to each sample
+7. **Summarize** mean number of species per body site per timepoint
+8. **Plot** a line plot (log10 y-axis) of mean species count per body site across timepoints
+
+> **Note:** The unit of analysis throughout is **species**. Genus is used solely as a join key because exact species name matching is not always consistent between the count matrix and the Disbiome mapping file.
 
 ### Output
 
-A line plot showing the mean number of detected microbial species per body site origin across longitudinal timepoints (T1–T10), with body sites color-coded and a `"multiple"` category for genera associated with more than one body site.
+A line plot showing the mean number of detected microbial species per body site origin across longitudinal timepoints (T1–T10), with body sites color-coded and a `"multiple"` category for species whose genus is associated with more than one body site.
 
 ---
 
 ## Notes
 
-- Body site classification is done at the **genus level** — species are assigned the body site of their genus as recorded in Disbiome
-- Genera associated with multiple body sites are not discarded but are instead grouped into a `"multiple"` category to preserve their signal while avoiding misclassification
+- Species whose maps to multiple body sites are grouped into a `"multiple"` category rather than being discarded, to preserve their signal
 - The Disbiome API was originally accessed on 26 April 2022 in the reference paper; results may differ slightly with later access dates as the database is updated
 
 ---
